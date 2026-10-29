@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e7c7b">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>OmniCare AI Agent</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#062b2e;--card:#0d3d42;--card2:#114c52;--ink:#e8fbfa;--mute:#8fc7c4;--acc:#2dd4bf;--acc2:#0e7c7b;--bad:#f87171;--ok:#4ade80;--line:#1b6169}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,'Noto Sans Bengali','Hind Siliguri',sans-serif;background:radial-gradient(1200px 600px at 10% -10%,#0f5c60 0,transparent 60%),var(--bg);color:var(--ink);min-height:100vh}
+button,input,select,textarea{font:inherit}
+.wrap{max-width:1000px;margin:0 auto;padding:14px 14px 90px}
+header.top{display:flex;align-items:center;gap:10px;padding:12px 14px;position:sticky;top:0;background:#062b2ecc;backdrop-filter:blur(10px);z-index:5;border-bottom:1px solid var(--line)}
+header.top img{width:34px;height:34px}
+header.top b{font-size:18px}
+header.top .sp{flex:1}
+.card{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 8px 30px #0004}
+h2{margin:0 0 10px;font-size:18px}h3{margin:14px 0 8px;font-size:15px;color:var(--acc)}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 4px}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#06292d;color:var(--ink);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+textarea{min-height:90px;resize:vertical}
+.btn{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#032;border:0;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer}
+.btn.sec{background:#0a3338;color:var(--ink);border:1px solid var(--line)}
+.btn.bad{background:#7f1d1d;color:#fff}
+.btn.sm{padding:6px 10px;font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1;min-width:120px}.row>.btn{flex:0 0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.sw{position:relative;width:46px;height:26px;flex:0 0 46px!important;min-width:46px!important}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:#3b4f52;border-radius:26px;transition:.2s;cursor:pointer}
+.sw span:before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked+span{background:var(--ok)}
+.sw input:checked+span:before{transform:translateX(20px)}
+.chan{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line)}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;background:#0a3338;border:1px solid var(--line)}
+.tag.on{color:var(--ok)}.tag.off{color:var(--bad)}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;gap:4px;background:#062b2ef0;border-top:1px solid var(--line);padding:8px;overflow-x:auto;z-index:6}
+nav.tabs button{flex:1;min-width:76px;background:transparent;border:0;color:var(--mute);padding:8px 6px;border-radius:12px;font-size:12px;cursor:pointer}
+nav.tabs button.on{background:#0a3338;color:var(--acc)}
+nav.tabs button i{display:block;font-style:normal;font-size:20px}
+.msg{padding:10px 14px;border-radius:16px;margin:6px 0;max-width:85%;white-space:pre-wrap;line-height:1.5}
+.msg.u{background:var(--acc2);margin-left:auto}.msg.a{background:#0a3338;border:1px solid var(--line)}
+.msg img{max-width:100%;border-radius:12px;margin-top:6px}
+#chatbox{max-height:52vh;overflow:auto;padding:4px}
+.mic{width:64px;height:64px;border-radius:50%;border:0;font-size:28px;cursor:pointer;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 0 0 0 #2dd4bf88}
+.mic.rec{background:#dc2626;animation:p 1.2s infinite}
+@keyframes p{70%{box-shadow:0 0 0 18px #0000}100%{box-shadow:0 0 0 0 #0000}}
+.warn{background:#4a3a0a;border:1px solid #a67c00;color:#ffe08a;padding:10px;border-radius:12px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+td input{padding:6px 8px}
+#rx{background:#fff;color:#111;border-radius:12px;padding:22px;font-family:Georgia,'Noto Sans Bengali',serif;margin-top:12px}
+#rx .h{text-align:center;border-bottom:2px solid #0e7c7b;padding-bottom:8px;margin-bottom:10px}
+#rx .h b{font-size:22px;color:#0b4f6c}
+#rx .p{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:14px;border-bottom:1px solid #ccc;padding-bottom:6px}
+#rx ol{padding-left:20px}#rx li{margin:8px 0}
+#rx .sig{margin-top:40px;text-align:right;font-size:13px}
+.hide{display:none!important}
+@media print{body{background:#fff}header.top,nav.tabs,.card:not(.rxcard),.noprint{display:none!important}.rxcard{border:0;box-shadow:0 0 0;background:#fff;padding:0;margin:0}#rx{margin:0;border-radius:0}.wrap{padding:0}}
+.big{font-size:30px;font-weight:800}
+.hero{text-align:center;padding:30px 10px}
+.hero .logo{width:96px;height:96px}
+small,.mute{color:var(--mute)}
+</style>
+</head>
+<body>
+<header class="top"><img src="icon.svg" alt=""><b>OmniCare AI</b><span class="sp"></span><span id="who" class="tag"></span><button class="btn sec sm hide" id="installBtn">ইনস্টল</button><button class="btn sec sm hide" id="outBtn">লগআউট</button></header>
+<div class="wrap" id="app"></div>
+<nav class="tabs hide" id="tabs"></nav>
+
+<script>
+/* ===================== ডাটা ===================== */
+const KEY='omnicare_v1';
+const CHANNELS={website:'ওয়েবসাইট চ্যাট',whatsapp:'WhatsApp',messenger:'Messenger',instagram:'Instagram',tiktok:'TikTok',courier:'কুরিয়ার বুকিং',doctor:'ডাক্তার অ্যাসিস্ট্যান্ট',voicekb:'ভয়েস কিবোর্ড',scheduler:'পোস্ট শিডিউল'};
+const TYPES=['ওষুধ/ফার্মেসি','ডাক্তার/চেম্বার','ইলেকট্রিক্যাল','কসমেটিক','ন্যাচারাল প্রোডাক্ট','মেশিনারিজ','সার্ভিস','অন্যান্য'];
+let S=load();
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){return fresh()}}
+function fresh(){return{superPin:'',aiKey:'',aiModel:'gemini-2.0-flash',clients:[]}}
+function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>document.querySelector(s);
+let session=JSON.parse(sessionStorage.getItem('sess')||'null'); // {role:'super'|'client',cid}
+let tab='doctor';
+const C=()=>S.clients.find(c=>c.id===session?.cid);
+function newClient(name,type,sub){
+  const ch={};Object.keys(CHANNELS).forEach(k=>ch[k]=(k==='website'||k==='doctor'));
+  return{id:uid(),name,type,sub,pin:'1234',trainCode:'',active:true,expiry:'',channels:ch,instructions:'তুমি একজন বিনয়ী সহকারী। কাস্টমারের ভাষায় উত্তর দাও। শুধু ট্রেনিং তথ্য থেকে উত্তর দাও।',
+  products:[],kb:[],orders:[],doctor:{name:'Dr. Name',degree:'MBBS',chamber:'Chamber Name',address:'Address',phone:'01XXXXXXXXX',brand:'Clinic / Company'},courierKey:''}
+}
+function isLive(c){ // সুইচ + মেয়াদ
+  if(!c||!c.active)return false;
+  if(c.expiry&&new Date(c.expiry+'T23:59:59')<new Date())return false;
+  return true;
+}
+function allowed(c,ch){return isLive(c)&&c.channels[ch]}
+
+/* ===================== লগইন ===================== */
+function renderLogin(){
+  $('#tabs').classList.add('hide');$('#outBtn').classList.add('hide');$('#who').textContent='';
+  $('#app').innerHTML=`<div class="hero"><img class="logo" src="icon.svg"><div class="big">OmniCare AI Agent</div><p class="mute">দেশের মানুষের দ্রুত সেবায় — সেবাই আমাদের লক্ষ্য</p></div>
+  <div class="grid">
+   <div class="card"><h2>🛡️ সুপার অ্যাডমিন</h2>
+     <label>${S.superPin?'পিন দিন':'নতুন পিন সেট করুন (প্রথমবার)'}</label><input id="sp" type="password" inputmode="numeric" placeholder="••••">
+     <p><button class="btn" onclick="superLogin()">প্রবেশ</button></p></div>
+   <div class="card"><h2>🏪 ক্লায়েন্ট</h2>
+     <label>আপনার প্রতিষ্ঠান</label><select id="cl">${S.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')||'<option value="">কোনো ক্লায়েন্ট নেই</option>'}</select>
+     <label>পিন</label><input id="cp" type="password" inputmode="numeric" placeholder="••••">
+     <p><button class="btn" onclick="clientLogin()">প্রবেশ</button></p></div>
+  </div>
+  <p class="mute" style="text-align:center">ডেমো: ক্লায়েন্ট তৈরি হলে ডিফল্ট পিন 1234 (পরিবর্তনযোগ্য)</p>`;
+}
+function superLogin(){
+  const p=$('#sp').value.trim();if(p.length<4)return alert('কমপক্ষে ৪ সংখ্যার পিন দিন');
+  if(!S.superPin){S.superPin=p;save()}
+  else if(S.superPin!==p)return alert('ভুল পিন');
+  session={role:'super'};sessionStorage.setItem('sess',JSON.stringify(session));go();
+}
+function clientLogin(){
+  const c=S.clients.find(x=>x.id===$('#cl').value);if(!c)return alert('ক্লায়েন্ট নির্বাচন করুন');
+  if(c.pin!==$('#cp').value)return alert('ভুল পিন');
+  if(!isLive(c))return alert('আপনার সার্ভিস বর্তমানে বন্ধ। সুপার অ্যাডমিনের সাথে যোগাযোগ করুন।');
+  session={role:'client',cid:c.id};sessionStorage.setItem('sess',JSON.stringify(session));tab='doctor';go();
+}
+$('#outBtn').onclick=()=>{session=null;sessionStorage.removeItem('sess');go()};
+
+/* ===================== সুপার অ্যাডমিন ===================== */
+function renderSuper(){
+  $('#who').textContent='সুপার অ্যাডমিন';
+  $('#tabs').classList.remove('hide');
+  $('#tabs').innerHTML=`<button class="on"><i>🛡️</i>ক্লায়েন্ট</button>`;
+  $('#app').innerHTML=`
+  <div class="card"><h2>➕ নতুন ক্লায়েন্ট (ভাড়া)</h2>
+   <div class="row"><div><label>নাম</label><input id="nn" placeholder="যেমন: Omnicare"></div>
+   <div><label>সাবডোমেইন</label><input id="ns" placeholder="omnicare"></div>
+   <div><label>ব্যবসার ধরন</label><select id="nt">${TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
+   <button class="btn" onclick="addClient()">তৈরি করুন</button></div></div>
+  <div class="card"><h2>🤖 এআই সেটিং (ফ্রি Gemini API)</h2>
+   <p class="mute">aistudio.google.com থেকে বিনামূল্যে API Key নিন। Key না দিলে সিস্টেম নিজের ডাটাবেস থেকে সাধারণ উত্তর দেবে।</p>
+   <div class="row"><div><label>Gemini API Key</label><input id="ak" type="password" value="${esc(S.aiKey)}"></div>
+   <div><label>মডেল</label><input id="am" value="${esc(S.aiModel)}"></div>
+   <button class="btn" onclick="S.aiKey=$('#ak').value.trim();S.aiModel=$('#am').value.trim()||'gemini-2.0-flash';save();alert('সেভ হয়েছে')">সেভ</button></div></div>
+  ${S.clients.map(clientCard).join('')||'<div class="card mute">এখনো কোনো ক্লায়েন্ট নেই</div>'}
+  <div class="card"><h2>💾 ব্যাকআপ</h2><div class="row"><button class="btn sec" onclick="backup()">ডাউনলোড</button><input type="file" id="rf" accept=".json" onchange="restore(this)"></div></div>`;
+}
+function clientCard(c){
+  const live=isLive(c);
+  return `<div class="card"><div class="row"><div><b>${esc(c.name)}</b> <span class="tag">${esc(c.type)}</span><br><small>${esc(c.sub)}.আপনার-ডোমেইন.com</small></div>
+   <span class="tag ${live?'on':'off'}" style="flex:0">${live?'চালু':'বন্ধ'}</span></div>
+   <div class="chan"><b>মাস্টার সুইচ (পুরো এজেন্ট)</b><label class="sw"><input type="checkbox" ${c.active?'checked':''} onchange="setC('${c.id}','active',this.checked)"><span></span></label></div>
+   <h3>চ্যানেল / ফিচার সুইচ</h3>
+   ${Object.entries(CHANNELS).map(([k,v])=>`<div class="chan"><span>${v}</span><label class="sw"><input type="checkbox" ${c.channels[k]?'checked':''} onchange="setCh('${c.id}','${k}',this.checked)"><span></span></label></div>`).join('')}
+   <div class="row"><div><label>মেয়াদ শেষ (অটো অফ)</label><input type="date" value="${c.expiry}" onchange="setC('${c.id}','expiry',this.value)"></div>
+   <div><label>ক্লায়েন্ট পিন</label><input value="${esc(c.pin)}" onchange="setC('${c.id}','pin',this.value)"></div></div>
+   <p class="row"><button class="btn sec sm" onclick="enter('${c.id}')">ওয়ার্কস্পেস খুলুন</button><button class="btn bad sm" onclick="delClient('${c.id}')">মুছুন</button></p></div>`;
+}
+function addClient(){
+  const n=$('#nn').value.trim(),s=($('#ns').value.trim()||n).toLowerCase().replace(/[^a-z0-9-]/g,'');
+  if(!n)return alert('নাম দিন');S.clients.push(newClient(n,$('#nt').value,s));save();renderSuper();
+}
+function setC(id,k,v){S.clients.find(c=>c.id===id)[k]=v;save();renderSuper()}
+function setCh(id,k,v){S.clients.find(c=>c.id===id).channels[k]=v;save()}
+function delClient(id){if(confirm('এই ক্লায়েন্ট মুছবেন?')){S.clients=S.clients.filter(c=>c.id!==id);save();renderSuper()}}
+function enter(id){session={role:'super',cid:id};tab='doctor';go()}
+function backup(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='omnicare-backup.json';a.click()}
+function restore(i){const f=i.files[0];if(!f)return;f.text().then(t=>{S=JSON.parse(t);save();renderSuper()})}
+
+/* ===================== ক্লায়েন্ট ওয়ার্কস্পেস ===================== */
+const TABS=[['doctor','🩺','ডাক্তার'],['chat','💬','এজেন্ট চ্যাট'],['voice','🎙️','ভয়েস কিবোর্ড'],['train','🧠','ট্রেনিং'],['orders','📦','অর্ডার'],['settings','⚙️','সেটিং']];
+function renderClient(){
+  const c=C();if(!c){session=null;return go()}
+  $('#who').textContent=c.name;
+  if(session.role==='super'){ $('#outBtn').textContent='← ফিরুন'}
+  $('#tabs').classList.remove('hide');
+  $('#tabs').innerHTML=TABS.map(([k,i,t])=>`<button class="${tab===k?'on':''}" onclick="setTab('${k}')"><i>${i}</i>${t}</button>`).join('');
+  if(!isLive(c)){$('#app').innerHTML=`<div class="card"><h2>⛔ সার্ভিস বন্ধ</h2><p>মাস্টার সুইচ বন্ধ বা মেয়াদ শেষ।</p></div>`;return}
+  ({doctor:vDoctor,chat:vChat,voice:vVoice,train:vTrain,orders:vOrders,settings:vSettings}[tab])(c);
+}
+function setTab(t){
+  const c=C();
+  if(t==='train'&&session.role!=='super'){ // সিকিউরিটি কোড
+    if(!c.trainCode){const n=prompt('ট্রেনিং সিকিউরিটি কোড সেট করুন (প্রথমবার):');if(!n)return;c.trainCode=n;save()}
+    else if(prompt('ট্রেনিং সিকিউরিটি কোড দিন:')!==c.trainCode)return alert('ভুল কোড');
+  }
+  tab=t;renderClient();
+}
+function off(ch){return `<div class="card"><h2>⛔ এই ফিচার বন্ধ</h2><p>${CHANNELS[ch]} সুইচ বন্ধ আছে। চালু করতে সুপার অ্যাডমিনের সাথে যোগাযোগ করুন।</p></div>`}
+
+/* ---------- এআই কল ---------- */
+async function ai(system,user,opts={}){
+  if(!S.aiKey)throw new Error('NO_KEY');
+  const parts=[{text:user}];if(opts.image)parts.push({inline_data:{mime_type:opts.image.mime,data:opts.image.data}});
+  const body={systemInstruction:{parts:[{text:system}]},contents:[{role:'user',parts}]};
+  if(opts.json)body.generationConfig={responseMimeType:'application/json'};
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${S.aiModel}:generateContent?key=${S.aiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json();if(!r.ok)throw new Error(j.error?.message||'AI error');
+  return j.candidates?.[0]?.content?.parts?.map(p=>p.text).join('')||'';
+}
+
+/* ---------- ডাক্তার অ্যাসিস্ট্যান্ট ---------- */
+let rx={patient:{name:'',age:'',weight:''},dx:'',drugs:[],tests:[],follow:'',transcript:''};
+let rec=null;
+function vDoctor(c){
+  if(!allowed(c,'doctor'))return $('#app').innerHTML=off('doctor');
+  $('#app').innerHTML=`
+  <div class="card noprint"><h2>🩺 ডাক্তার অ্যাসিস্ট্যান্ট</h2>
+   <div class="warn">এআই শুধু খসড়া সাজায়। চিকিৎসা ও চূড়ান্ত সিদ্ধান্ত ডাক্তারের। ডাক্তার যাচাই ও সংশোধন না করে প্রিন্ট বা শেয়ার করবেন না।</div>
+   <div class="row"><div><label>রোগীর নাম</label><input id="pn" value="${esc(rx.patient.name)}"></div>
+   <div><label>বয়স</label><input id="pa" value="${esc(rx.patient.age)}"></div>
+   <div><label>ওজন (কেজি)</label><input id="pw" value="${esc(rx.patient.weight)}"></div></div>
+   <label>রোগীর কথা (মাইক চাপুন, রোগী বলবেন — ডাক্তারের প্রশ্ন সংরক্ষণ হবে না, শুধু রোগীর বর্ণনা রাখুন)</label>
+   <div class="row"><button class="mic ${rec?'rec':''}" id="micb" style="flex:0 0 64px" onclick="toggleMic('dt','bn-BD')">🎙️</button>
+   <textarea id="dt" placeholder="যেমন: জ্বর ও মাথাব্যথা তিন দিন ধরে...">${esc(rx.transcript)}</textarea></div>
+   <p class="row"><button class="btn" id="genb" onclick="genRx()">⚡ প্রেসক্রিপশন খসড়া করুন</button><button class="btn sec" onclick="rx={patient:{name:'',age:'',weight:''},dx:'',drugs:[],tests:[],follow:'',transcript:''};vDoctor(C())">নতুন রোগী</button></p>
+   <div id="status" class="mute"></div></div>
+   <div class="card noprint" id="editor"></div>
+   <div class="card rxcard"><div id="rx"></div>
+   <p class="row noprint"><button class="btn" onclick="window.print()">🖨️ প্রিন্ট / PDF</button><button class="btn sec" onclick="shareRx()">📤 শেয়ার</button><button class="btn sec" onclick="dlRx()">⬇️ ডাউনলোড (ছবি)</button></p></div>`;
+  drawEditor();drawRx();
+}
+function readPatient(){rx.patient={name:$('#pn').value,age:$('#pa').value,weight:$('#pw').value};rx.transcript=$('#dt').value}
+function matchKB(c,text){
+  const t=(text||'').toLowerCase(),groups={};
+  c.kb.forEach(r=>{
+    const keys=String(r.symptoms||'').toLowerCase().split(/[,،;]/).map(s=>s.trim()).filter(Boolean);
+    keys.push(String(r.disease||'').toLowerCase());
+    const hit=keys.filter(k=>k&&t.includes(k)).length;
+    if(hit){(groups[r.disease]=groups[r.disease]||{score:0,rows:[]});groups[r.disease].score+=hit;groups[r.disease].rows.push(r)}
+  });
+  const best=Object.entries(groups).sort((a,b)=>b[1].score-a[1].score)[0];return best?{disease:best[0],rows:best[1].rows}:null;
+}
+async function genRx(){
+  readPatient();const c=C(),st=$('#status');
+  if(!rx.transcript.trim())return alert('রোগীর সমস্যা বলুন বা লিখুন');
+  st.textContent='⏳ কাজ চলছে...';
+  const m=matchKB(c,rx.transcript);
+  if(S.aiKey){
+    try{
+      const kb=c.kb.slice(0,300).map(r=>`${r.disease}|${r.symptoms}|${r.generic}|${r.brand}|${r.dose}|${r.instruction_bn}|${r.tests}|${r.followup}`).join('\n');
+      const out=await ai(`তুমি একজন চিকিৎসকের সহকারী। তুমি চিকিৎসা দাও না, শুধু ডাক্তারের জন্য প্রেসক্রিপশনের খসড়া সাজাও। প্রদত্ত ডাটাবেস (disease|symptoms|generic|brand|dose|instruction_bn|tests|followup) থেকে ওষুধ ও পরীক্ষা অগ্রাধিকার দাও। ডাটাবেসে না মিললে সাধারণ প্রাথমিক পরামর্শ দাও এবং note এ লেখো "ডাটাবেসের বাইরে—ডাক্তার যাচাই করুন"। শিশু/গর্ভবতী/বয়স্ক হলে ডোজ নিয়ে সতর্ক থাকো। শুধু JSON দাও: {"diagnosis":"English","drugs":[{"generic":"","brand":"","dose":"English","instruction_bn":"বাংলায় খাওয়ার নিয়ম"}],"tests":["English"],"follow_bn":"বাংলায়","note":""}`,
+        `ডাটাবেস:\n${kb}\n\nরোগী: নাম ${rx.patient.name}, বয়স ${rx.patient.age}, ওজন ${rx.patient.weight}\nরোগীর বর্ণনা: ${rx.transcript}`,{json:true});
+      const j=JSON.parse(out.replace(/```json|```/g,''));
+      rx.dx=j.diagnosis||'';rx.drugs=(j.drugs||[]);rx.tests=j.tests||[];rx.follow=j.follow_bn||'';
+      st.textContent='✅ খসড়া তৈরি। '+(j.note||'ডাক্তার যাচাই করুন।');
+    }catch(e){fallback(m,st,'AI ব্যর্থ ('+e.message+'), ডাটাবেস থেকে: ')}
+  }else fallback(m,st,'AI Key নেই, ডাটাবেস থেকে: ');
+  drawEditor();drawRx();
+}
+function fallback(m,st,pre){
+  if(!m){rx.dx='';rx.drugs=[];rx.tests=[];rx.follow='';st.textContent=pre+'কোনো মিল নেই। নিচে হাতে লিখুন বা ট্রেনিং ট্যাবে ডাটা যোগ করুন।';return}
+  rx.dx=m.disease;rx.drugs=m.rows.map(r=>({generic:r.generic,brand:r.brand,dose:r.dose,instruction_bn:r.instruction_bn}));
+  rx.tests=[...new Set(m.rows.flatMap(r=>String(r.tests||'').split(',').map(s=>s.trim()).filter(Boolean)))];
+  rx.follow=m.rows[0].followup||'';st.textContent='✅ '+pre+m.disease+' — ডাক্তার যাচাই করুন।';
+}
+function drawEditor(){
+  $('#editor').innerHTML=`<h2>✏️ ডাক্তার সংশোধন</h2>
+  <label>রোগ নির্ণয় (ডাক্তারের)</label><input id="edx" value="${esc(rx.dx)}" oninput="rx.dx=this.value;drawRx()">
+  <h3>ওষুধ</h3><table><tr><th>Generic</th><th>Brand</th><th>Dose</th><th>খাওয়ার নিয়ম (বাংলা)</th><th></th></tr>
+  ${rx.drugs.map((d,i)=>`<tr><td><input value="${esc(d.generic)}" oninput="rx.drugs[${i}].generic=this.value;drawRx()"></td><td><input value="${esc(d.brand)}" oninput="rx.drugs[${i}].brand=this.value;drawRx()"></td><td><input value="${esc(d.dose)}" oninput="rx.drugs[${i}].dose=this.value;drawRx()"></td><td><input value="${esc(d.instruction_bn)}" oninput="rx.drugs[${i}].instruction_bn=this.value;drawRx()"></td><td><button class="btn bad sm" onclick="rx.drugs.splice(${i},1);drawEditor();drawRx()">✕</button></td></tr>`).join('')}</table>
+  <p><button class="btn sec sm" onclick="rx.drugs.push({generic:'',brand:'',dose:'',instruction_bn:''});drawEditor()">+ ওষুধ যোগ</button></p>
+  <label>পরীক্ষা (কমা দিয়ে, English)</label><input value="${esc(rx.tests.join(', '))}" oninput="rx.tests=this.value.split(',').map(s=>s.trim()).filter(Boolean);drawRx()">
+  <label>ফলোআপ / পরামর্শ (বাংলা)</label><input value="${esc(rx.follow)}" oninput="rx.follow=this.value;drawRx()">`;
+}
+function drawRx(){
+  const d=C().doctor,p=rx.patient,dt=new Date().toLocaleDateString('en-GB');
+  $('#rx').innerHTML=`<div class="h"><b>${esc(d.name)}</b><div>${esc(d.degree)}</div><div>${esc(d.chamber)} — ${esc(d.address)}</div><div>Mobile: ${esc(d.phone)} | ${esc(d.brand)}</div></div>
+  <div class="p"><span><b>Name:</b> ${esc(p.name)}</span><span><b>Age:</b> ${esc(p.age)}</span><span><b>Weight:</b> ${esc(p.weight)} kg</span><span><b>Date:</b> ${dt}</span></div>
+  <p><b>Diagnosis:</b> ${esc(rx.dx)}</p>
+  <p><b>℞</b></p><ol>${rx.drugs.map(x=>`<li><b>${esc(x.brand)}</b> (${esc(x.generic)}) — ${esc(x.dose)}<br>${esc(x.instruction_bn)}</li>`).join('')}</ol>
+  ${rx.tests.length?`<p><b>Investigations:</b> ${esc(rx.tests.join(', '))}</p>`:''}
+  ${rx.follow?`<p><b>পরামর্শ:</b> ${esc(rx.follow)}</p>`:''}
+  <div class="sig">__________________<br>${esc(d.name)}</div>`;
+}
+function rxText(){const d=C().doctor,p=rx.patient;return `${d.name}\n${d.chamber}, ${d.address}\nMob: ${d.phone}\n\nPatient: ${p.name} | Age: ${p.age} | Wt: ${p.weight}kg\nDx: ${rx.dx}\n\nRx:\n${rx.drugs.map((x,i)=>`${i+1}. ${x.brand} (${x.generic}) ${x.dose}\n   ${x.instruction_bn}`).join('\n')}\n\nTests: ${rx.tests.join(', ')}\n${rx.follow}`}
+async function shareRx(){const t=rxText();if(navigator.share)try{await navigator.share({title:'Prescription',text:t});return}catch(e){}navigator.clipboard?.writeText(t);alert('টেক্সট কপি হয়েছে — যেকোনো প্ল্যাটফর্মে পেস্ট করুন')}
+function dlRx(){ // SVG foreignObject → PNG
+  const el=$('#rx'),w=el.offsetWidth,h=el.offsetHeight;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Georgia,serif;background:#fff;color:#111;padding:22px;width:${w-44}px">${el.innerHTML.replace(/<br>/g,'<br/>')}</div></foreignObject></svg>`;
+  const img=new Image();img.onload=()=>{const cv=document.createElement('canvas');cv.width=w*2;cv.height=h*2;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.scale(2,2);x.drawImage(img,0,0);const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='prescription.png';a.click()};
+  img.onerror=()=>alert('ছবি তৈরি হয়নি, প্রিন্ট → Save as PDF ব্যবহার করুন');
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+
+/* ---------- মাইক (স্পিচ → টেক্সট) ---------- */
+function toggleMic(targetId,lang){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return alert('এই ব্রাউজারে ভয়েস সাপোর্ট নেই। Chrome ব্যবহার করুন।');
+  if(rec){rec.stop();return}
+  rec=new SR();rec.lang=lang||'bn-BD';rec.continuous=true;rec.interimResults=true;
+  const t=document.getElementById(targetId);const base=t.value?t.value+' ':'';let fin='';
+  rec.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)fin+=r[0].transcript+' ';else it+=r[0].transcript}t.value=base+fin+it;t.dispatchEvent(new Event('input'))};
+  rec.onend=()=>{rec=null;document.querySelectorAll('.mic').forEach(b=>b.classList.remove('rec'))};
+  rec.start();document.querySelectorAll('.mic').forEach(b=>b.classList.add('rec'));
+}
+
+/* ---------- কাস্টমার এজেন্ট চ্যাট ---------- */
+let chat=[];let chatImg=null;
+function vChat(c){
+  if(!allowed(c,'website'))return $('#app').innerHTML=off('website');
+  $('#app').innerHTML=`<div class="card"><h2>💬 কাস্টমার এজেন্ট (পরীক্ষা / ওয়েবসাইট চ্যাট)</h2>
+  <div id="chatbox">${chat.map(m=>`<div class="msg ${m.r}">${esc(m.t)}${m.imgs||''}</div>`).join('')||'<p class="mute">কাস্টমার হিসেবে লিখুন বা ছবি/ভয়েস দিন।</p>'}</div>
+  <div class="row" style="margin-top:8px"><button class="mic" style="flex:0 0 52px;height:52px;width:52px;font-size:22px" onclick="toggleMic('ci','')">🎙️</button>
+  <input id="ci" placeholder="মেসেজ লিখুন..." onkeydown="if(event.key==='Enter')sendChat()">
+  <label class="btn sec sm" style="margin:0;color:var(--ink)">📷<input type="file" accept="image/*" class="hide" onchange="pickImg(this)"></label>
+  <button class="btn" onclick="sendChat()">পাঠান</button></div><small id="imgn" class="mute"></small></div>`;
+  const b=$('#chatbox');b.scrollTop=b.scrollHeight;
+}
+function pickImg(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{chatImg={mime:f.type,data:r.result.split(',')[1]};$('#imgn').textContent='ছবি যুক্ত: '+f.name};r.readAsDataURL(f)}
+function productsText(c){return c.products.map(p=>`- ${p.name} | দাম: ${p.price} | অফার: ${p.offer||'নেই'} | উপাদান: ${p.ingredients||''} | বিবরণ: ${p.desc||''} | ছবি: ${p.img?'আছে(IMG:'+p.id+')':'নেই'}`).join('\n')}
+async function sendChat(){
+  const c=C(),inp=$('#ci'),text=inp.value.trim();if(!text&&!chatImg)return;
+  if(!allowed(c,'website'))return alert('চ্যানেল বন্ধ');
+  chat.push({r:'u',t:text||'[ছবি]'});inp.value='';vChat(c);
+  let reply='';
+  try{
+    const sys=`${c.instructions}\nব্যবসা: ${c.type} (${c.name}). কাস্টমার যে ভাষায় লিখবে সেই ভাষায় উত্তর দাও। শুধু নিচের তথ্য থেকে উত্তর দাও; না থাকলে বলো "এ বিষয়ে আমাদের প্রতিনিধি আপনাকে জানাবেন"। কাস্টমার পণ্যের ছবি চাইলে উত্তরে [IMG:id] লেখো। অর্ডার নিলে নাম, ঠিকানা, ফোন, পণ্য, পরিমাণ সংগ্রহ করে শেষে একটি লাইনে লেখো ORDER:{"name":"","phone":"","address":"","items":""}। মেডিকেল রিপোর্টের ছবি দিলে শুধু সাধারণ ব্যাখ্যা দাও, রোগ নির্ণয় বা প্রেসক্রিপশন নয়, এবং ডাক্তার দেখাতে বলো।\nপণ্যতালিকা:\n${productsText(c)}\nডাক্তার/হাকিম:\n${c.kb.length?'(ট্রেনিং ডাটাবেস আছে)':''}`;
+    reply=await ai(sys,text||'ছবিটি দেখো',{image:chatImg});
+  }catch(e){reply=localReply(c,text)}
+  chatImg=null;
+  const om=reply.match(/ORDER:(\{.*\})/);
+  if(om){try{const o=JSON.parse(om[1]);c.orders.push({id:uid(),...o,date:new Date().toISOString(),status:'নতুন'});save();reply=reply.replace(/ORDER:\{.*\}/,'✅ আপনার অর্ডার গ্রহণ করা হয়েছে।')}catch(e){}}
+  let imgs='';reply=reply.replace(/\[IMG:(\w+)\]/g,(_,id)=>{const p=c.products.find(x=>x.id===id);if(p?.img)imgs+=`<br><img src="${p.img}">`;return''});
+  chat.push({r:'a',t:reply,imgs});vChat(c);
+}
+function localReply(c,q){
+  const t=q.toLowerCase();const p=c.products.find(x=>t.includes(x.name.toLowerCase()));
+  if(p)return `${p.name}\nদাম: ${p.price}\n${p.offer?'অফার: '+p.offer+'\n':''}${p.desc||''}\n[IMG:${p.id}]`;
+  if(/দাম|price|কত/.test(t)&&c.products.length)return c.products.map(x=>`${x.name}: ${x.price}`).join('\n');
+  return 'এ বিষয়ে আমাদের প্রতিনিধি আপনাকে জানাবেন। (AI Key যোগ করলে আরো স্মার্ট উত্তর পাবেন)';
+}
+
+/* ---------- ভয়েস কিবোর্ড (লিখে সাজানো) ---------- */
+function vVoice(c){
+  if(!allowed(c,'voicekb'))return $('#app').innerHTML=off('voicekb');
+  $('#app').innerHTML=`<div class="card"><h2>🎙️ ভয়েস কিবোর্ড (বানান ঠিক ও সুন্দর করে সাজানো)</h2>
+  <p class="mute">এখানে বলুন → এআই সাজাবে → কপি করে যেকোনো অ্যাপে পেস্ট করুন। (সব অ্যাপের ওপর ভাসমান মাইকের জন্য পরের ধাপে Chrome এক্সটেনশন/কিবোর্ড লাগবে)</p>
+  <div class="row"><select id="vl"><option value="bn-BD">বাংলা</option><option value="en-US">English</option><option value="hi-IN">हिन्दी</option><option value="ar-SA">العربية</option></select>
+  <button class="mic" style="flex:0 0 64px" onclick="toggleMic('vt',$('#vl').value)">🎙️</button></div>
+  <textarea id="vt" style="min-height:140px"></textarea>
+  <p class="row"><button class="btn" onclick="polish()">✨ সাজিয়ে দিন</button><button class="btn sec" onclick="navigator.clipboard.writeText($('#vt').value);alert('কপি হয়েছে')">কপি</button></p></div>`;
+}
+async function polish(){const t=$('#vt').value;if(!t)return;try{$('#vt').value=await ai('ব্যবহারকারীর এলোমেলো কথা একই ভাষায় সুন্দর, শুদ্ধ বানানে ও গুছিয়ে লেখো। শুধু ফলাফল টেক্সট দাও।',t)}catch(e){alert(e.message==='NO_KEY'?'সুপার অ্যাডমিনে Gemini API Key দিন':e.message)}}
+
+/* ---------- ট্রেনিং ---------- */
+function vTrain(c){
+  $('#app').innerHTML=`
+  <div class="card"><h2>🧠 এআই নির্দেশ (লিখে ট্রেনিং)</h2><p class="mute">এখানে যা লিখবেন, এজেন্ট সেভাবেই আচরণ করবে। কোড লাগবে না।</p>
+  <textarea id="ins" style="min-height:140px">${esc(c.instructions)}</textarea>
+  <p class="row"><button class="btn" onclick="C().instructions=$('#ins').value;save();alert('আপডেট হয়েছে')">সেভ</button><button class="btn sec" onclick="const n=prompt('নতুন সিকিউরিটি কোড');if(n){C().trainCode=n;save()}">কোড পরিবর্তন</button></p></div>
+  <div class="card"><h2>📚 ওষুধ / রোগ ডাটাবেস আপলোড (CSV, Excel, JSON)</h2>
+  <p class="mute">কলাম: disease, symptoms, generic, brand, dose, instruction_bn, tests, followup — বর্তমানে <b>${c.kb.length}</b> সারি। PDF হলে Excel/CSV করে দিন।</p>
+  <input type="file" accept=".csv,.xlsx,.xls,.json" onchange="importKB(this)">
+  <p class="row"><a class="btn sec sm" href="sample-knowledge.csv" download>নমুনা ফাইল</a><button class="btn bad sm" onclick="if(confirm('সব মুছবেন?')){C().kb=[];save();vTrain(C())}">ডাটাবেস খালি করুন</button></p></div>
+  <div class="card"><h2>🛍️ পণ্য যোগ</h2>
+   <div class="row"><div><label>নাম</label><input id="pn1"></div><div><label>দাম</label><input id="pp1"></div><div><label>অফার</label><input id="po1"></div></div>
+   <label>উপাদান</label><input id="pi1"><label>বিবরণ/কার্যকারিতা</label><textarea id="pd1"></textarea>
+   <label>ছবি</label><input type="file" id="pf1" accept="image/*">
+   <p><button class="btn" onclick="addProduct()">যোগ করুন</button></p>
+   ${c.products.map(p=>`<div class="chan"><span>${p.img?`<img src="${p.img}" width="34" style="border-radius:8px;vertical-align:middle"> `:''}${esc(p.name)} — ${esc(p.price)}</span><button class="btn bad sm" onclick="C().products=C().products.filter(x=>x.id!=='${p.id}');save();vTrain(C())">✕</button></div>`).join('')}</div>`;
+}
+function importKB(i){
+  const f=i.files[0];if(!f)return;const c=C();
+  const done=rows=>{c.kb.push(...rows.filter(r=>r.disease));save();alert(rows.length+' সারি যুক্ত হয়েছে');vTrain(c)};
+  if(/\.json$/i.test(f.name))return f.text().then(t=>done(JSON.parse(t)));
+  const rd=new FileReader();rd.onload=()=>{const wb=XLSX.read(rd.result,{type:'array'});done(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}))};rd.readAsArrayBuffer(f);
+}
+function addProduct(){
+  const c=C(),n=$('#pn1').value.trim();if(!n)return alert('নাম দিন');
+  const p={id:uid(),name:n,price:$('#pp1').value,offer:$('#po1').value,ingredients:$('#pi1').value,desc:$('#pd1').value,img:''};
+  const f=$('#pf1').files[0];const fin=()=>{c.products.push(p);save();vTrain(c)};
+  if(!f)return fin();
+  const im=new Image(),r=new FileReader();r.onload=()=>{im.onload=()=>{const k=Math.min(1,500/im.width),cv=document.createElement('canvas');cv.width=im.width*k;cv.height=im.height*k;cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);p.img=cv.toDataURL('image/jpeg',.7);fin()};im.src=r.result};r.readAsDataURL(f);
+}
+
+/* ---------- অর্ডার ও কুরিয়ার ---------- */
+function vOrders(c){
+  $('#app').innerHTML=`<div class="card"><h2>📦 অর্ডার (${c.orders.length})</h2>
+  <p class="row"><button class="btn" onclick="bookAll()">🚚 আজকের সব অর্ডার বুক করুন</button></p>
+  <p class="mute">কুরিয়ার API (Steadfast/Pathao/RedX) Key সেটিং-এ দিলে পরের ধাপে আসল বুকিং হবে। এখন অর্ডার "বুকিং-এর জন্য প্রস্তুত" চিহ্নিত হয়।</p>
+  <table><tr><th>নাম</th><th>ফোন</th><th>ঠিকানা</th><th>পণ্য</th><th>স্ট্যাটাস</th></tr>
+  ${c.orders.map(o=>`<tr><td>${esc(o.name)}</td><td>${esc(o.phone)}</td><td>${esc(o.address)}</td><td>${esc(o.items)}</td><td>${esc(o.status)}</td></tr>`).join('')}</table>
+  <h3>নিজে অর্ডার যোগ</h3><div class="row"><input id="on" placeholder="নাম"><input id="op" placeholder="ফোন"><input id="oa" placeholder="ঠিকানা"><input id="oi" placeholder="পণ্য"><button class="btn" onclick="C().orders.push({id:uid(),name:$('#on').value,phone:$('#op').value,address:$('#oa').value,items:$('#oi').value,date:new Date().toISOString(),status:'নতুন'});save();vOrders(C())">যোগ</button></div></div>`;
+}
+function bookAll(){const c=C();if(!allowed(c,'courier'))return alert('কুরিয়ার ফিচার বন্ধ');let n=0;c.orders.forEach(o=>{if(o.status==='নতুন'){o.status='বুকিং-এর জন্য প্রস্তুত';n++}});save();alert(n+'টি অর্ডার প্রস্তুত');vOrders(c)}
+
+/* ---------- সেটিং ---------- */
+function vSettings(c){
+  const d=c.doctor;
+  $('#app').innerHTML=`<div class="card"><h2>⚙️ চেম্বার / কোম্পানি তথ্য (প্রেসক্রিপশনের হেডার)</h2>
+  ${['name','degree','chamber','address','phone','brand'].map(k=>`<label>${k}</label><input value="${esc(d[k])}" oninput="C().doctor['${k}']=this.value;save()">`).join('')}
+  <label>কুরিয়ার API Key</label><input type="password" value="${esc(c.courierKey)}" oninput="C().courierKey=this.value;save()"></div>
+  <div class="card"><h2>চ্যানেল স্ট্যাটাস</h2>${Object.entries(CHANNELS).map(([k,v])=>`<div class="chan"><span>${v}</span><span class="tag ${c.channels[k]?'on':'off'}">${c.channels[k]?'চালু':'বন্ধ'}</span></div>`).join('')}
+  <p class="mute">চালু/বন্ধ করার অধিকার শুধু সুপার অ্যাডমিনের।</p></div>`;
+}
+
+/* ===================== রাউটার ও PWA ===================== */
+function go(){
+  $('#outBtn').classList.toggle('hide',!session);
+  $('#outBtn').textContent='লগআউট';
+  if(!session)return renderLogin();
+  if(session.role==='super'&&!session.cid)return renderSuper();
+  if(session.role==='super'){ $('#outBtn').textContent='← সুপার অ্যাডমিন';$('#outBtn').onclick=()=>{session={role:'super'};sessionStorage.setItem('sess',JSON.stringify(session));go()} }
+  else $('#outBtn').onclick=()=>{session=null;sessionStorage.removeItem('sess');go()};
+  renderClient();
+}
+let dp;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#installBtn').classList.remove('hide')});
+$('#installBtn').onclick=async()=>{if(dp){dp.prompt();dp=null;$('#installBtn').classList.add('hide')}};
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+// মেয়াদ অটো-চেক প্রতি মিনিটে
+setInterval(()=>{if(session?.cid&&!isLive(C())&&session.role==='client')go()},60000);
+go();
+</script>
+</body>
+</html>
